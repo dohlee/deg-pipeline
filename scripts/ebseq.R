@@ -1,7 +1,7 @@
 # Install required packages if they are not installed.
 source("https://bioconductor.org/biocLite.R")
 require('EBSeq') || biocLite('EBseq')
-require('optparse') || install.packages('optparse')
+require('optparse') || install.packages('optparse', repos='http://cran.us.r-project.org')
 
 # Parse options.
 option_list = list(

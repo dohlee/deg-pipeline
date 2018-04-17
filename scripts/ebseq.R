@@ -22,3 +22,19 @@ if (is.null(args$condition)) {
   print_help(parser)
   stop("Condition file name[-c, --condition] should be specified.", call.=FALSE)
 }
+
+# Get input data and convert it into a matrix.
+input_data = read.table(args$input, stringsAsFactors=FALSE, row.names=1, header=T)
+data_mat = data.matrix(input_data)
+
+# Compute size factors.
+size_factors = MedianNorm(data_mat)
+
+# Parse conditions.
+conditions = rep(c('C1', 'C2'), c(70, 81))  # Just for a test.
+
+# Discover DEGs.
+EB_out = EBTest(Data=data_mat, Conditions=as.factor(conditions), sizeFactors=size_factors, maxround=5)
+EB_DE_result = GetDEResults(EB_out, FDR=0.05)
+
+print(EB_DE_result$DEfound)

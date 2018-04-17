@@ -7,7 +7,7 @@ require('optparse') || install.packages('optparse', repos='http://cran.us.r-proj
 option_list = list(
   make_option(c('-i', '--input'), type='character', default=NULL, help='Input file name.'),
   make_option(c('-c', '--condition'), type='character', default=NULL, help='Input condition file name.'),
-  make_option(c('-o', '--outdir'), type='character', default='result/ebseq', help='Output directory for EBSeq results. [default=%default]'))
+  make_option(c('-o', '--outdir'), type='character', default='result/ebseq', help='Output directory for EBSeq results. [default=%default]')
 )
 parser = OptionParser(option_list=option_list)
 args = parse_args(parser)

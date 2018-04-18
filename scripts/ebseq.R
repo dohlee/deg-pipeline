@@ -1,6 +1,4 @@
-# Install required packages if they are not installed.
-source("https://bioconductor.org/biocLite.R")
-require('EBSeq', quietly=TRUE) || biocLite('EBseq')
+# Install optparse package if it is not installed.
 require('optparse', quietly=TRUE) || install.packages('optparse', repos='http://cran.us.r-project.org')
 
 # Parse options.
@@ -11,6 +9,10 @@ option_list = list(
 )
 parser = OptionParser(option_list=option_list)
 args = parse_args(parser)
+
+# Install required packages if they are not installed.
+source("https://bioconductor.org/biocLite.R")
+require('EBSeq', quietly=TRUE) || biocLite('EBseq')
 
 # Error handling for options.
 if (is.null(args$input)) {
@@ -24,14 +26,19 @@ if (is.null(args$condition)) {
 }
 
 # Get input data and convert it into a matrix.
-input_data = read.table(args$input, stringsAsFactors=FALSE, row.names=1, header=T)
+input_data = read.table(args$input, row.names=1, header=TRUE, check.names=FALSE)
 data_mat = data.matrix(input_data)
+
+# Parse conditions.
+conditions = read.table(args$condition, stringsAsFactors=FALSE, row.names=1, header=FALSE)
+
+# Only take samples in intersection.
+common_samples = intersect(colnames(data_mat), rownames(conditions))
+data_mat = data_mat[, common_samples]
+conditions = conditions[common_samples, ]
 
 # Compute size factors.
 size_factors = MedianNorm(data_mat)
-
-# Parse conditions.
-conditions = rep(c('C1', 'C2'), c(70, 81))  # Just for a test.
 
 # Discover DEGs.
 EB_out = EBTest(Data=data_mat, Conditions=as.factor(conditions), sizeFactors=size_factors, maxround=5)

@@ -52,10 +52,52 @@ size_factors = MedianNorm(data_mat)
 # Discover DEGs.
 flog.info('Discovering DEGS...')
 flog.info('Running EBTest...')
-EB_out = EBTest(Data=data_mat, Conditions=as.factor(conditions), sizeFactors=size_factors, maxround=5)
-flog.info('Running GetDEResults...')
-EB_DE_result = GetDEResults(EB_out, FDR=0.05)
 
-flog.info('Writing to output file...')
+iteration = 0
+repeat {
+  # Increase iteration numbers if the conditions are not met.
+  # Hopefully most of the time, 10 iterations will be enough for convergence.
+  iteration = iteration + 10
+  EB_out = EBTest(Data=data_mat, Conditions=as.factor(conditions), sizeFactors=size_factors, maxround=5)
+  flog.info('Running GetDEResults...')
+  EB_DE_result = GetDEResults(EB_out, FDR=0.05)
+
+  # Check convergences.
+  # Each parameter should change less than 1e-3 between the last two iterations.
+  l = length(EB_out$Alpha)
+  if (!abs(EB_out$Alpha[l] - EB_out$Alpha[l-1]) < 1e-3) continue
+  if (!abs(EB_out$Beta[l] - EB_out$Beta[l-1]) < 1e-3) continue
+  if (!abs(EB_out$P[l] - EB_out$P[l-1]) < 1e-3) continue
+  # If all conditions are met, break the loop.
+  break
+}
+
+# Write DEGs to output file.
+flog.info('Writing a DEG list to %s', file.path(args$outdir, 'ebseq_degs.txt'))
 dir.create(args$outdir, recursive=TRUE, showWarnings=FALSE)
 write.table(EB_DE_result$DEfound, file.path(args$outdir, 'ebseq_degs.txt'), quote=F, row.names=F, col.names=F)
+
+# Write fold-change result to output file.
+flog.info('Writing a fold-change list to %s', file.path(args$outdir, 'ebseq_fcs.txt'))
+fold_changes = PostFC(EB_out)
+write.table(fold_changes, file.path(args$outdir, 'ebseq_fcs.txt'), quote=F)
+
+# Save RealFC vs PosteriorFC plot.
+flog.info('Saving a RealFC vs PosteriorFC plot to %s', file.path(args$outdir, 'ebseq_realfc_vs_posteriorfc.png'))
+png(file.path(args$outdir, 'ebseq_realfc_vs_posteriorfc.png'))
+PlotPostVsRawFC(EB_out, fold_changes)
+dev.off()
+
+# Save Q-Q plot to check the model fit.
+flog.info('Saving a Q-Q plot to %s', file.path(args$outdir, 'ebseq_qqplot.png'))
+png(file.path(args$outdir, 'ebseq_qqplot.png'), width=960, height=480)
+par(mfrow=c(1, 2))
+QQP(EB_out)
+dev.off()
+
+# Save density fit plot to check the model fit.
+flog.info('Saving a density fit plot to %s', file.path(args$outdir, 'ebseq_density_fit.png'))
+png(file.path(args$outdir, 'ebseq_density_fit.png'), width=960, height=480)
+par(mfrow=c(1, 2))
+DenNHist(EB_out)
+dev.off()

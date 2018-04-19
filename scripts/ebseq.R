@@ -58,16 +58,16 @@ repeat {
   # Increase iteration numbers if the conditions are not met.
   # Hopefully most of the time, 10 iterations will be enough for convergence.
   iteration = iteration + 10
-  EB_out = EBTest(Data=data_mat, Conditions=as.factor(conditions), sizeFactors=size_factors, maxround=5)
+  EB_out = EBTest(Data=data_mat, Conditions=as.factor(conditions), sizeFactors=size_factors, maxround=iteration)
   flog.info('Running GetDEResults...')
   EB_DE_result = GetDEResults(EB_out, FDR=0.05)
 
   # Check convergences.
   # Each parameter should change less than 1e-3 between the last two iterations.
   l = length(EB_out$Alpha)
-  if (!abs(EB_out$Alpha[l] - EB_out$Alpha[l-1]) < 1e-3) continue
-  if (!abs(EB_out$Beta[l] - EB_out$Beta[l-1]) < 1e-3) continue
-  if (!abs(EB_out$P[l] - EB_out$P[l-1]) < 1e-3) continue
+  if (!abs(EB_out$Alpha[l] - EB_out$Alpha[l-1]) < 1e-3) next
+  if (!abs(EB_out$Beta[l] - EB_out$Beta[l-1]) < 1e-3) next
+  if (!abs(EB_out$P[l] - EB_out$P[l-1]) < 1e-3) next
   # If all conditions are met, break the loop.
   break
 }
